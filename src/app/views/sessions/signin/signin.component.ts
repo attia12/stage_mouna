@@ -1,0 +1,153 @@
+import { Component, OnInit } from '@angular/core';
+import { SharedAnimations } from 'src/app/shared/animations/shared-animations';
+import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
+
+import {
+    Router,
+    RouteConfigLoadStart,
+    ResolveStart,
+    RouteConfigLoadEnd,
+    ResolveEnd,
+    ActivatedRoute
+} from '@angular/router';
+import {environment} from "../../../../environments/environment";
+import {ToastrService} from "ngx-toastr";
+import {NotificationService} from "../../../services/notification.service";
+import {AuthService} from "../../../services/auth.service";
+
+@Component({
+    selector: 'app-signin',
+    templateUrl: './signin.component.html',
+    styleUrls: ['./signin.component.scss'],
+    animations: [SharedAnimations],
+    standalone: false
+})
+export class SigninComponent implements OnInit {
+    loading: boolean = false;
+    loadingText: string = '';
+    signinForm: UntypedFormGroup;
+    returnUrl: string = '/dashboard/v1';
+    showPassword: boolean = false;
+
+    constructor(
+        private fb: UntypedFormBuilder,
+        private auth: AuthService,
+        private router: Router,
+        private route: ActivatedRoute,
+        private toastr: ToastrService,
+        private notificationService: NotificationService
+    ) { }
+
+    ngOnInit() {
+        // Get return URL from route parameters or default to dashboard
+        this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard/v1';
+
+        // Listen to router events for loading states
+        this.router.events.subscribe(event => {
+            if (event instanceof RouteConfigLoadStart || event instanceof ResolveStart) {
+                this.loadingText = 'Loading Dashboard Module...';
+                this.loading = true;
+            }
+            if (event instanceof RouteConfigLoadEnd || event instanceof ResolveEnd) {
+                this.loading = false;
+            }
+        });
+
+        // Initialize form with validation
+        this.signinForm = this.fb.group({
+            email: ['', [Validators.required, Validators.email]],
+            password: ['', [Validators.required, Validators.minLength(4)]],
+            rememberMe: [false]
+        });
+
+        // For development, you can pre-fill the form
+        if (!environment.production) {
+            this.signinForm.patchValue({
+                email: 'attia@mail.com',
+                password: 'pAssword1!_'
+            });
+        }
+    }
+
+    signin() {
+        // Mark all fields as touched to show validation errors
+        if (this.signinForm.invalid) {
+            Object.keys(this.signinForm.controls).forEach(key => {
+                this.signinForm.get(key)?.markAsTouched();
+            });
+            return;
+        }
+
+        this.loading = true;
+        this.loadingText = 'Signing in...';
+
+        const credentials = {
+            email: this.signinForm.value.email,
+            password: this.signinForm.value.password
+        };
+
+        this.auth.signin(credentials).subscribe({
+            next: (response:any) => {
+                // Success
+                this.toastr.success('Welcome back!', 'Login Successful');
+
+                // Initialize WebSocket for notifications
+                const user = this.auth.getCurrentUser();
+                if (user) {
+                    this.notificationService.initializeWebSocket(user.id, response.access_token);
+                }
+
+
+
+
+                this.router.navigateByUrl(this.returnUrl);
+                this.loading = false;
+            },
+            error: (error) => {
+                // Error handling
+                this.loading = false;
+                this.loadingText = '';
+
+                if (error.status === 401) {
+                    this.toastr.error('Invalid email or password', 'Authentication Failed');
+                } else if (error.status === 403) {
+                    this.toastr.error('Your account has been locked', 'Access Denied');
+                } else if (error.status === 0) {
+                    this.toastr.error('Cannot connect to server', 'Connection Error');
+                } else {
+                    this.toastr.error(
+                        error.error?.message || 'An unexpected error occurred',
+                        'Login Failed'
+                    );
+                }
+            }
+        });
+    }
+
+    togglePassword() {
+        this.showPassword = !this.showPassword;
+    }
+
+    // Helper methods for form validation
+    isFieldInvalid(fieldName: string): boolean {
+        const field = this.signinForm.get(fieldName);
+        return !!(field && field.invalid && (field.dirty || field.touched));
+    }
+
+    getFieldError(fieldName: string): string {
+        const field = this.signinForm.get(fieldName);
+        if (field?.errors) {
+            if (field.errors['required']) {
+                return `${fieldName} is required`;
+            }
+            if (field.errors['email']) {
+                return 'Please enter a valid email address';
+            }
+            if (field.errors['minlength']) {
+                return `Password must be at least ${field.errors['minlength'].requiredLength} characters`;
+            }
+        }
+        return '';
+    }
+
+}

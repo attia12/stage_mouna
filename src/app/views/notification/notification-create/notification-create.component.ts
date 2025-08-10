@@ -1,0 +1,160 @@
+import {Component, OnInit} from '@angular/core';
+import {FormBuilder, FormGroup, Validators} from "@angular/forms";
+import {
+  CreateNotificationDTO,
+  NotificationType,
+  Priority
+} from '../../../models/notification.model';
+import {NotificationService} from "../../../services/notification.service";
+import {Router} from "@angular/router";
+import {ToastrService} from "ngx-toastr";
+import {UserService} from "../../../services/user.service";
+@Component({
+  selector: 'app-notification-create',
+
+  templateUrl: './notification-create.component.html',
+  styleUrls: ['./notification-create.component.scss'],
+  standalone: false
+})
+export class NotificationCreateComponent implements OnInit {
+  notificationForm: FormGroup;
+  users: any[] = []; // This should be loaded from a UserService
+  loading = false;
+
+  // Enum references for template
+  NotificationType = NotificationType;
+  Priority = Priority;
+
+  typeOptions = Object.values(NotificationType);
+  priorityOptions = Object.values(Priority);
+
+  constructor(
+      private fb: FormBuilder,
+      private notificationService: NotificationService,
+      private router: Router,
+      private toastr: ToastrService,
+      private userService: UserService
+  ) {
+    this.notificationForm = this.createForm();
+  }
+
+  ngOnInit(): void {
+    this.loadUsers();
+  }
+
+  private createForm(): FormGroup {
+    return this.fb.group({
+      type: [NotificationType.INFO, Validators.required],
+      priority: [Priority.NORMAL, Validators.required],
+      message: ['', [Validators.required, Validators.minLength(10)]],
+      recipientIds: [[], Validators.required],
+      sendToAll: [false]
+    });
+  }
+
+  loadUsers(): void {
+    this.userService.getUsers().subscribe(data => {
+      this.users = data;
+    });
+  }
+
+  onSendToAllChange(): void {
+    const sendToAll = this.notificationForm.get('sendToAll')?.value;
+    const recipientIdsControl = this.notificationForm.get('recipientIds');
+
+    if (sendToAll) {
+      // Select all users
+      recipientIdsControl?.setValue(this.users.map(u => u.id));
+      recipientIdsControl?.disable();
+    } else {
+      recipientIdsControl?.enable();
+      recipientIdsControl?.setValue([]);
+    }
+  }
+
+  onSubmit(): void {
+    if (this.notificationForm.invalid) {
+      this.markFormGroupTouched(this.notificationForm);
+      return;
+    }
+
+    this.loading = true;
+
+    const formValue = this.notificationForm.getRawValue();
+    const dto: CreateNotificationDTO = {
+      type: formValue.type,
+      priority: formValue.priority,
+      message: formValue.message,
+      recipientIds: formValue.recipientIds,
+      sentBySystem: false
+    };
+
+    this.notificationService.createNotification(dto).subscribe({
+      next: (notification) => {
+        this.toastr.success('Notification sent successfully!', 'Success');
+        this.router.navigate(['/notifications']);
+      },
+      error: (error) => {
+        console.error('Error creating notification:', error);
+        this.toastr.error('Failed to send notification', 'Error');
+        this.loading = false;
+      }
+    });
+  }
+
+  private markFormGroupTouched(formGroup: FormGroup): void {
+    Object.keys(formGroup.controls).forEach(key => {
+      const control = formGroup.get(key);
+      control?.markAsTouched();
+
+      if (control instanceof FormGroup) {
+        this.markFormGroupTouched(control);
+      }
+    });
+  }
+
+  isFieldInvalid(fieldName: string): boolean {
+    const field = this.notificationForm.get(fieldName);
+    return !!(field && field.invalid && (field.dirty || field.touched));
+  }
+
+  getFieldError(fieldName: string): string {
+    const field = this.notificationForm.get(fieldName);
+    if (field?.errors) {
+      if (field.errors['required']) {
+        return `${fieldName} is required`;
+      }
+      if (field.errors['minlength']) {
+        return `${fieldName} must be at least ${field.errors['minlength'].requiredLength} characters`;
+      }
+    }
+    return '';
+  }
+
+  getTypeIcon(type: any): string {
+    switch (type) {
+      case NotificationType.ALERT:
+        return 'i-Warning-Window';
+      case NotificationType.TASK:
+        return 'i-Check';
+      case NotificationType.INFO:
+        return 'i-Information';
+      default:
+        return 'i-Bell';
+    }
+  }
+
+  getPriorityClass(priority: Priority): string {
+    switch (priority) {
+      case Priority.URGENT:
+        return 'badge-danger';
+      case Priority.NORMAL:
+        return 'badge-warning';
+      case Priority.LOW:
+        return 'badge-success';
+      default:
+        return 'badge-secondary';
+    }
+  }
+
+}

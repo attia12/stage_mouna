@@ -1,0 +1,17 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../out-tsc/app",
+    "types": [
+      "@angular/localize"
+    ]
+  },
+  "files": [
+    "main.ts",
+    "polyfills.ts",
+    "window-global-fix.ts"
+  ],
+  "include": [
+    "src/**/*.d.ts"
+  ]
+}

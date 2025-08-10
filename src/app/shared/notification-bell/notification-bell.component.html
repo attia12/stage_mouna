@@ -1,0 +1,126 @@
+<!-- src/app/shared/components/notification-bell/notification-bell.component.html -->
+
+<div class="notification-bell-container">
+    <!-- Notification Bell Icon -->
+    <div class="notification-bell" (click)="toggleDropdown()">
+        <i class="i-Bell text-muted header-icon"></i>
+        <!-- Badge for unread count -->
+        <span class="badge badge-danger badge-top" *ngIf="stats.unreadCount > 0">
+      {{ stats.unreadCount > 99 ? '99+' : stats.unreadCount }}
+    </span>
+        <!-- Urgent indicator -->
+        <span class="urgent-indicator" *ngIf="stats.urgentUnreadCount > 0"></span>
+    </div>
+
+    <!-- Dropdown Menu -->
+    <div class="notification-dropdown" [class.show]="showDropdown">
+        <!-- Header -->
+        <div class="dropdown-header">
+            <h6 class="mb-0">Notifications</h6>
+            <div class="header-actions">
+                <button
+                        class="btn btn-link btn-sm text-muted p-0"
+                        (click)="markAllAsRead()"
+                        *ngIf="stats.unreadCount > 0">
+                    Mark all as read
+                </button>
+            </div>
+        </div>
+
+        <!-- Notification Stats -->
+        <div class="notification-stats" *ngIf="stats.unreadCount > 0">
+            <div class="stat-item">
+                <span class="badge badge-danger">{{ stats.urgentUnreadCount }}</span>
+                <small>Urgent</small>
+            </div>
+            <div class="stat-item">
+                <span class="badge badge-primary">{{ stats.unreadCount }}</span>
+                <small>Unread</small>
+            </div>
+            <div class="stat-item">
+                <span class="badge badge-secondary">{{ stats.totalNotifications }}</span>
+                <small>Total</small>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div class="dropdown-body" *ngIf="loading">
+            <div class="text-center py-3">
+                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications List -->
+        <div class="dropdown-body" *ngIf="!loading">
+            <!-- Empty State -->
+            <div class="empty-state" *ngIf="recentNotifications.length === 0">
+                <i class="i-Bell-2 text-muted mb-2" style="font-size: 48px;"></i>
+                <p class="text-muted mb-0">No notifications</p>
+            </div>
+
+            <!-- Notification Items -->
+            <div class="notification-list">
+                <div
+                        class="notification-item"
+                        *ngFor="let notification of recentNotifications"
+                        [class.unread]="notification.status === 'UNREAD'"
+                        (click)="viewNotification(notification)">
+
+                    <!-- Icon and Content -->
+                    <div class="notification-content">
+                        <div class="notification-icon">
+                            <i [class]="getTypeIcon(notification.type)"></i>
+                        </div>
+
+                        <div class="notification-details">
+                            <div class="notification-header">
+                                <span class="notification-type">{{ notification.type }}</span>
+                                <span
+                                        class="badge badge-sm ml-2"
+                                        [ngClass]="getPriorityClass(notification.priority)">
+                  {{ notification.priority }}
+                </span>
+                            </div>
+
+                            <p class="notification-message">{{ notification.message }}</p>
+
+                            <div class="notification-meta">
+                                <small class="text-muted">
+                                    <i class="i-Clock-3"></i>
+                                    {{ notification.createdAt | date:'short' }}
+                                </small>
+                                <small class="text-muted ml-2" *ngIf="notification.creatorName">
+                                    <i class="i-Administrator"></i>
+                                    {{ notification.creatorName }}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Unread Indicator -->
+                    <div class="unread-indicator" *ngIf="notification.status === 'UNREAD'">
+                        <span class="badge badge-primary badge-pill">New</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="dropdown-footer">
+            <button
+                    class="btn btn-primary btn-block btn-sm"
+                    (click)="viewAllNotifications()">
+                View All Notifications
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Click outside to close -->
+<div
+        class="notification-overlay"
+        *ngIf="showDropdown"
+        (click)="toggleDropdown()">
+</div>

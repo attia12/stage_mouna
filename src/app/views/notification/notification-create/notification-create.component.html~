@@ -1,0 +1,239 @@
+<!-- src/app/views/notifications/notification-create/notification-create.component.html -->
+
+<div class="main-content">
+    <div class="breadcrumb">
+        <h1>Create Notification</h1>
+        <ul>
+            <li><a href="#">Dashboard</a></li>
+            <li><a routerLink="/notifications">Notifications</a></li>
+            <li>Create</li>
+        </ul>
+    </div>
+
+    <div class="separator-breadcrumb border-top"></div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Send New Notification</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="card-body">
+    <form [formGroup]="notificationForm" (ngSubmit)="onSubmit()">
+
+        <!-- Type Selection -->
+        <div class="form-group row">
+            <label class="col-sm-3 col-form-label">Type *</label>
+            <div class="col-sm-9">
+                <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                    <label
+                            class="btn btn-outline-primary"
+                            *ngFor="let type of typeOptions"
+                            [class.active]="notificationForm.get('type')?.value === type">
+                        <input
+                                type="radio"
+                                [value]="type"
+                                formControlName="type">
+                        <i [class]="getTypeIcon(type)"></i> {{ type }}
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Priority Selection -->
+        <div class="form-group row">
+            <label class="col-sm-3 col-form-label">Priority *</label>
+            <div class="col-sm-9">
+                <select class="form-control" formControlName="priority">
+                    <option *ngFor="let priority of priorityOptions" [value]="priority">
+                        {{ priority }}
+                    </option>
+                </select>
+                <small class="form-text text-muted">
+                    Urgent notifications will trigger email alerts
+                </small>
+            </div>
+        </div>
+
+        <!-- Message -->
+        <div class="form-group row">
+            <label class="col-sm-3 col-form-label">Message *</label>
+            <div class="col-sm-9">
+                <textarea
+                        class="form-control"
+                        formControlName="message"
+                        rows="4"
+                        placeholder="Enter notification message..."
+                        [class.is-invalid]="isFieldInvalid('message')">
+                </textarea>
+                <div class="invalid-feedback" *ngIf="isFieldInvalid('message')">
+                    {{ getFieldError('message') }}
+                </div>
+                <small class="form-text text-muted">
+                    {{ notificationForm.get('message')?.value?.length || 0 }} characters
+                </small>
+            </div>
+        </div>
+
+        <!-- Recipients -->
+        <div class="form-group row">
+            <label class="col-sm-3 col-form-label">Recipients *</label>
+            <div class="col-sm-9">
+                <!-- Send to All Checkbox -->
+                <div class="form-check mb-2">
+                    <input
+                            type="checkbox"
+                            class="form-check-input"
+                            formControlName="sendToAll"
+                            (change)="onSendToAllChange()">
+                    <label class="form-check-label">
+                        Send to all users
+                    </label>
+                </div>
+
+                <!-- User Selection -->
+                <select
+                        multiple
+                        class="form-control"
+                        formControlName="recipientIds"
+                        size="6"
+                        [class.is-invalid]="isFieldInvalid('recipientIds')">
+                    <option *ngFor="let user of users" [value]="user.id">
+                        {{ user.firstName }} {{ user.lastName }}
+                    </option>
+                </select>
+                <div class="invalid-feedback" *ngIf="isFieldInvalid('recipientIds')">
+                    Please select at least one recipient
+                </div>
+                <small class="form-text text-muted">
+                    Hold Ctrl/Cmd to select multiple users
+                </small>
+            </div>
+        </div>
+
+        <!-- Preview Section -->
+        <div class="form-group row" *ngIf="notificationForm.get('message')?.value">
+            <label class="col-sm-3 col-form-label">Preview</label>
+            <div class="col-sm-9">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start">
+                            <i [class]="getTypeIcon(notificationForm.get('type')?.value)"
+                               class="mr-3 text-primary"
+                               style="font-size: 24px;"></i>
+                            <div class="flex-1">
+                                <div class="mb-2">
+                          <span class="badge" [ngClass]="getPriorityClass(notificationForm.get('priority')?.value)">
+                            {{ notificationForm.get('priority')?.value }}
+                          </span>
+                                    <span class="badge badge-info ml-2">
+                            {{ notificationForm.get('type')?.value }}
+                          </span>
+                                </div>
+                                <p class="mb-1">{{ notificationForm.get('message')?.value }}</p>
+                                <small class="text-muted">
+                                    Will be sent to {{ notificationForm.get('recipientIds')?.value?.length || 0 }} user(s)
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="form-group row">
+            <div class="col-sm-9 offset-sm-3">
+                <button
+                        type="submit"
+                        class="btn btn-primary"
+                        [disabled]="loading || notificationForm.invalid">
+                  <span *ngIf="!loading">
+                    <i class="i-Paper-Plane"></i> Send Notification
+                  </span>
+                    <span *ngIf="loading">
+                    <span class="spinner-border spinner-border-sm mr-2"></span>
+                    Sending...
+                  </span>
+                </button>
+                <button
+                        type="button"
+                        class="btn btn-secondary ml-2"
+                        routerLink="/notifications">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+
+<!-- Help Section -->
+<div class="col-md-4">
+    <div class="card">
+        <div class="card-header">
+            <h5>Notification Guidelines</h5>
+        </div>
+        <div class="card-body">
+            <h6>Priority Levels:</h6>
+            <ul class="list-unstyled">
+                <li class="mb-2">
+                    <span class="badge badge-danger">URGENT</span>
+                    <small class="d-block text-muted">
+                        Critical issues requiring immediate attention. Sends email alerts.
+                    </small>
+                </li>
+                <li class="mb-2">
+                    <span class="badge badge-warning">NORMAL</span>
+                    <small class="d-block text-muted">
+                        Standard notifications for regular updates.
+                    </small>
+                </li>
+                <li class="mb-2">
+                    <span class="badge badge-success">LOW</span>
+                    <small class="d-block text-muted">
+                        Informational messages, no immediate action required.
+                    </small>
+                </li>
+            </ul>
+
+            <hr>
+
+            <h6>Notification Types:</h6>
+            <ul class="list-unstyled">
+                <li class="mb-2">
+                    <i class="i-Warning-Window text-danger"></i> <strong>ALERT</strong>
+                    <small class="d-block text-muted">
+                        System alerts, warnings, or error conditions
+                    </small>
+                </li>
+                <li class="mb-2">
+                    <i class="i-Check text-success"></i> <strong>TASK</strong>
+                    <small class="d-block text-muted">
+                        Task assignments or action required items
+                    </small>
+                </li>
+                <li class="mb-2">
+                    <i class="i-Information text-info"></i> <strong>INFO</strong>
+                    <small class="d-block text-muted">
+                        General information or updates
+                    </small>
+                </li>
+            </ul>
+
+            <hr>
+
+            <h6>Best Practices:</h6>
+            <ul class="small text-muted">
+                <li>Keep messages clear and concise</li>
+                <li>Use URGENT priority sparingly</li>
+                <li>Include actionable information</li>
+                <li>Target specific user groups when possible</li>
+            </ul>
+        </div>
+    </div>
+</div>

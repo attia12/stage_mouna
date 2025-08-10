@@ -1,0 +1,171 @@
+import {Component, OnDestroy, OnInit} from '@angular/core';
+import { Router } from '@angular/router';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import {
+  NotificationService
+} from '../../services/notification.service';
+import {
+  Notification,
+  NotificationStats, NotificationStatus,
+  Priority
+} from '../../models/notification.model';
+
+@Component({
+  selector: 'app-notification-bell',
+
+  templateUrl: './notification-bell.component.html',
+  styleUrls: ['./notification-bell.component.scss'],
+  standalone: false
+})
+export class NotificationBellComponent implements OnInit, OnDestroy{
+  private destroy$ = new Subject<void>();
+
+  stats: NotificationStats = {
+    totalNotifications: 0,
+    unreadCount: 0,
+    readCount: 0,
+    urgentUnreadCount: 0
+  };
+
+  recentNotifications: Notification[] = [];
+  showDropdown = false;
+  loading = false;
+  Priority = Priority;
+
+  constructor(
+      private notificationService: NotificationService,
+      private router: Router
+  ) {}
+
+  ngOnInit(): void {
+    // Subscribe to notification stats
+    this.notificationService.stats$
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(stats => {
+          this.stats = stats;
+        });
+
+    // Subscribe to new notifications
+    this.notificationService.notification$
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(notification => {
+          // Add to recent notifications (keep only 5)
+          this.recentNotifications.unshift(notification);
+          if (this.recentNotifications.length > 5) {
+            this.recentNotifications.pop();
+          }
+        });
+
+    // Load initial data
+    this.loadRecentNotifications();
+    this.notificationService.loadNotificationStats().subscribe();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  toggleDropdown(): void {
+    this.showDropdown = !this.showDropdown;
+    if (this.showDropdown) {
+      this.loadRecentNotifications();
+    }
+  }
+
+  loadRecentNotifications(): void {
+    this.loading = true;
+    this.notificationService.getNotifications({
+      page: 0,
+      size: 5,
+      sortBy: 'createdAt',
+      sortDirection: 'DESC'
+    }).subscribe({
+      next: (response) => {
+        this.recentNotifications = response.content;
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error loading notifications:', error);
+        this.loading = false;
+      }
+    });
+  }
+
+  markAsRead(event: Event, notification: Notification): void {
+    event.stopPropagation();
+    if (notification.status === 'UNREAD') {
+      this.notificationService.markAsRead(notification.id).subscribe({
+        next: () => {
+          notification.status = 'READ';
+        },
+        error: (error) => {
+          console.error('Error marking notification as read:', error);
+        }
+      });
+    }
+  }
+
+  markAllAsRead(): void {
+    this.notificationService.markAllAsRead().subscribe({
+      next: () => {
+        this.recentNotifications.forEach(n => n.status = <NotificationStatus>'READ');
+      },
+      error: (error) => {
+        console.error('Error marking all as read:', error);
+      }
+    });
+  }
+
+  viewAllNotifications(): void {
+    this.showDropdown = false;
+    this.router.navigate(['/notifications']);
+  }
+
+  viewNotification(notification: Notification): void {
+    this.markAsRead(event!, notification);
+    this.showDropdown = false;
+    this.router.navigate(['/notifications', notification.id]);
+  }
+
+  getPriorityClass(priority: Priority): string {
+    switch (priority) {
+      case Priority.URGENT:
+        return 'badge-danger';
+      case Priority.NORMAL:
+        return 'badge-warning';
+      case Priority.LOW:
+        return 'badge-success';
+      default:
+        return 'badge-secondary';
+    }
+  }
+
+  getPriorityIcon(priority: Priority): string {
+    switch (priority) {
+      case Priority.URGENT:
+        return 'i-Bell-2';
+      case Priority.NORMAL:
+        return 'i-Information';
+      case Priority.LOW:
+        return 'i-Speach-Bubble-3';
+      default:
+        return 'i-Bell';
+    }
+  }
+
+  getTypeIcon(type: string): string {
+    switch (type) {
+      case 'ALERT':
+        return 'i-Warning-Window';
+      case 'TASK':
+        return 'i-Check';
+      case 'INFO':
+        return 'i-Information';
+      default:
+        return 'i-Bell';
+    }
+  }
+
+}

@@ -1,0 +1,131 @@
+import { Injectable } from '@angular/core';
+import {Client, Message, Stomp, StompSubscription} from "@stomp/stompjs";
+import {BehaviorSubject, Observable} from "rxjs";
+import SockJS from "sockjs-client";
+
+@Injectable({
+  providedIn: 'root'
+})
+export class WebsocketService {
+
+  private stompClient: Client | null = null;
+  private connectionStatus$ = new BehaviorSubject<boolean>(false);
+  private subscriptions: Map<string, StompSubscription> = new Map();
+
+  constructor() {}
+
+  /**
+   * Connect to WebSocket server
+   */
+  connect(token: string): Observable<boolean> {
+    if (this.stompClient && this.stompClient.connected) {
+      return this.connectionStatus$.asObservable();
+    }
+
+    const socket = new SockJS('http://localhost:8080/ws');
+    this.stompClient = Stomp.over(socket);
+
+    // Configure STOMP client
+    this.stompClient.configure({
+      debug: (msg: string) => {
+        console.log('STOMP: ' + msg);
+      },
+      reconnectDelay: 5000,
+      heartbeatIncoming: 4000,
+      heartbeatOutgoing: 4000,
+      connectHeaders: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    // Connect to server
+    this.stompClient.onConnect = (frame) => {
+      console.log('Connected to WebSocket server:', frame);
+      this.connectionStatus$.next(true);
+    };
+
+    this.stompClient.onStompError = (frame) => {
+      console.error('STOMP error:', frame);
+      this.connectionStatus$.next(false);
+    };
+
+    this.stompClient.onWebSocketClose = () => {
+      console.log('WebSocket connection closed');
+      this.connectionStatus$.next(false);
+    };
+
+    this.stompClient.activate();
+
+    return this.connectionStatus$.asObservable();
+  }
+
+  /**
+   * Disconnect from WebSocket server
+   */
+  disconnect(): void {
+    if (this.stompClient) {
+      // Unsubscribe all subscriptions
+      this.subscriptions.forEach((subscription) => {
+        subscription.unsubscribe();
+      });
+      this.subscriptions.clear();
+
+      // Deactivate client
+      this.stompClient.deactivate();
+      this.stompClient = null;
+      this.connectionStatus$.next(false);
+    }
+  }
+
+  /**
+   * Subscribe to a topic
+   */
+  subscribe(destination: string, callback: (message: any) => void): StompSubscription | null {
+    if (!this.stompClient || !this.stompClient.connected) {
+      console.error('WebSocket is not connected');
+      return null;
+    }
+
+    // Unsubscribe if already subscribed to this destination
+    if (this.subscriptions.has(destination)) {
+      this.subscriptions.get(destination)?.unsubscribe();
+    }
+
+    const subscription = this.stompClient.subscribe(destination, (message: Message) => {
+      const body = JSON.parse(message.body);
+      callback(body);
+    });
+
+    this.subscriptions.set(destination, subscription);
+    return subscription;
+  }
+
+  /**
+   * Send message to server
+   */
+  send(destination: string, body: any): void {
+    if (!this.stompClient || !this.stompClient.connected) {
+      console.error('WebSocket is not connected');
+      return;
+    }
+
+    this.stompClient.publish({
+      destination,
+      body: JSON.stringify(body)
+    });
+  }
+
+  /**
+   * Get connection status
+   */
+  getConnectionStatus(): Observable<boolean> {
+    return this.connectionStatus$.asObservable();
+  }
+
+  /**
+   * Check if connected
+   */
+  isConnected(): boolean {
+    return this.stompClient?.connected || false;
+  }
+}

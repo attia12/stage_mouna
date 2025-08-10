@@ -1,0 +1,48 @@
+<div class="landing-page">
+  <div class="container-fluid">
+    <!-- <div class="row justify-content-center">
+      <div class="col-md-10 col-lg-8 text-center py-5">
+        <h1 class="display-4 fw-bold mb-4">Gull Admin Template</h1>
+        <p style="max-width: 500px" class="fs-4 text-muted mx-auto mb-5 ">Full-featured, professional-looking admin template with three layout options that concentrate all the attention on your business.</p>
+      </div>
+    </div> -->
+
+    <div class="row justify-content-center pt-5">
+      <div class="col-md-10 col-lg-8">
+        <div class="row g-4">
+          <div class="col-4" *ngFor="let layout of layouts">
+            <div class="card shadow-sm h-100 layout-card">
+              <div class="row g-0">
+                <div class="col-md-12">
+                  <img [src]="layout.image" [alt]="layout.name" class="img-fluid layout-image">
+                </div>
+                <div class="col-md-12">
+                  <div class="card-body d-flex flex-column h-100">
+                    <div>
+                      <span class="badge bg-primary mb-3">LAYOUT</span>
+                      <h5 class="card-title fw-bold mb-1">{{layout.name}}</h5>
+                      <p class="card-text text-muted mb-4">{{layout.description}}</p>
+                    </div>
+                    <div class="mt-auto">
+                      <button class="btn btn-primary d-block w-100 rounded-full" (click)="navigateToLayout(layout.route)">
+                        View Demo
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- <div class="row mt-5 mb-4">
+          <div class="col-12 text-center">
+            <p class="text-muted">
+              <small>© {{currentYear}} Gull Admin Template. All rights reserved.</small>
+            </p>
+          </div>
+        </div> -->
+      </div>
+    </div>
+  </div>
+</div>
