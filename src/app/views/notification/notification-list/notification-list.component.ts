@@ -194,4 +194,5 @@ export class NotificationListComponent implements OnInit, OnDestroy {
   hasUnread(): boolean {
     return this.notifications.some(n => n.status === this.NotificationStatus.UNREAD);
   }
+
 }

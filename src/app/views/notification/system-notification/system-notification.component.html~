@@ -1,0 +1,56 @@
+
+
+<div class="system-notification-card" [class.urgent]="notification.priority === 'URGENT'">
+    <div class="notification-header">
+        <div class="system-info">
+            <i class="i-Computer-2 system-icon"></i>
+            <div>
+        <span class="badge" [ngClass]="getSystemBadgeClass()">
+          SYSTEM AUTOMATED
+        </span>
+                <small class="text-muted d-block">{{ systemSource }}</small>
+            </div>
+        </div>
+        <div class="notification-time">
+            <small class="text-muted">
+                <i class="i-Clock-4"></i>
+                {{ notification.createdAt | date:'short' }}
+            </small>
+        </div>
+    </div>
+
+    <div class="notification-body">
+        <div class="notification-icon-wrapper">
+            <i [class]="iconClass"></i>
+        </div>
+        <div class="notification-content">
+            <div class="notification-meta">
+        <span class="badge badge-pill" [ngClass]="getPriorityClass()">
+          {{ notification.priority }}
+        </span>
+                <span class="badge badge-pill badge-secondary ml-1">
+          {{ notification.type }}
+        </span>
+            </div>
+            <p class="notification-message">
+                {{ notification.message }}
+            </p>
+
+            <!-- Action buttons for system notifications -->
+            <div class="notification-actions" *ngIf="notification.priority === 'URGENT'">
+                <button class="btn btn-sm btn-primary">
+                    <i class="i-Check"></i> Acknowledge
+                </button>
+                <button class="btn btn-sm btn-outline-primary">
+                    <i class="i-Eye"></i> View Details
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Urgent indicator animation -->
+    <div class="urgent-indicator" *ngIf="notification.priority === 'URGENT'">
+        <div class="pulse"></div>
+    </div>
+</div>
+

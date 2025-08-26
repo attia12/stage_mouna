@@ -8,6 +8,7 @@ import {NotificationListComponent} from "./notification-list/notification-list.c
 import {ReactiveFormsModule} from "@angular/forms";
 import {NgxPaginationModule} from "ngx-pagination";
 import {NotificationCreateComponent} from "./notification-create/notification-create.component";
+import {SystemNotificationComponent} from "./system-notification/system-notification.component";
 
 @NgModule({
   imports: [
@@ -17,6 +18,6 @@ import {NotificationCreateComponent} from "./notification-create/notification-cr
     ReactiveFormsModule,
     NgxPaginationModule
   ],
-  declarations: [NotificationListComponent,NotificationCreateComponent]
+  declarations: [NotificationListComponent,NotificationCreateComponent,SystemNotificationComponent]
 })
 export class NotificationsModule { }

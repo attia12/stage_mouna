@@ -47,7 +47,7 @@ export class NotificationService {
       if (connected) {
         // Subscribe to user's notifications
         this.webSocketService.subscribe(
-            `/topic/notifications/${userId}`,
+            `/queue/notifications/${userId}`,
             (notification: Notification) => {
               this.handleNewNotification(notification);
             }
@@ -55,7 +55,7 @@ export class NotificationService {
 
         // Subscribe to notification stats updates
         this.webSocketService.subscribe(
-            `/topic/notification-stats/${userId}`,
+            `/queue/notification-stats/${userId}`,
             (stats: NotificationStats) => {
               this.statsSubject.next(stats);
             }
@@ -93,7 +93,7 @@ export class NotificationService {
       timeOut: 5000,
       closeButton: true,
       progressBar: true,
-      positionClass: 'toast-top-right',
+      positionClass: 'toast-bottom-left',
       enableHtml: true
     };
 

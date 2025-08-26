@@ -136,7 +136,109 @@
             </div>
 
             <!-- Notifications Table -->
+<!--            <div class="table-responsive" *ngIf="!loading && notifications.length > 0">-->
+<!--                <table class="table table-hover">-->
+<!--                    <thead>-->
+<!--                    <tr>-->
+<!--                        <th width="50">Type</th>-->
+<!--                        <th width="80">Status</th>-->
+<!--                        <th width="80">Priority</th>-->
+<!--                        <th>Message</th>-->
+<!--                        <th width="150">Created By</th>-->
+<!--                        <th width="150">Date</th>-->
+<!--                        <th width="100">Actions</th>-->
+<!--                    </tr>-->
+<!--                    </thead>-->
+
+<!--                    <tbody>-->
+<!--                    <ng-container *ngFor="let notification of notifications">-->
+<!--                        &lt;!&ndash; System Notification Row &ndash;&gt;-->
+<!--                        <tr *ngIf="notification.sentBySystem" class="system-notification-row">-->
+<!--                            <td colspan="7" class="p-0">-->
+<!--                                <app-system-notification [notification]="notification"></app-system-notification>-->
+<!--                            </td>-->
+<!--                        </tr>-->
+
+<!--                        &lt;!&ndash; Regular Notification Row &ndash;&gt;-->
+<!--                        <tr *ngIf="!notification.sentBySystem"-->
+<!--                            [class.table-light]="notification.status === NotificationStatus.UNREAD">-->
+
+<!--                            &lt;!&ndash; Type &ndash;&gt;-->
+<!--                            <td>-->
+<!--                                <i [class]="getTypeIcon(notification.type)"-->
+<!--                                   class="text-primary"-->
+<!--                                   style="font-size: 20px;"></i>-->
+<!--                            </td>-->
+
+<!--                            &lt;!&ndash; Status &ndash;&gt;-->
+<!--                            <td>-->
+<!--        <span class="badge" [ngClass]="getStatusClass(notification.status)">-->
+<!--          {{ notification.status }}-->
+<!--        </span>-->
+<!--                            </td>-->
+
+<!--                            &lt;!&ndash; Priority &ndash;&gt;-->
+<!--                            <td>-->
+<!--        <span class="badge" [ngClass]="getPriorityClass(notification.priority)">-->
+<!--          {{ notification.priority }}-->
+<!--        </span>-->
+<!--                            </td>-->
+
+<!--                            &lt;!&ndash; Message &ndash;&gt;-->
+<!--                            <td>-->
+<!--                                <div class="notification-message">-->
+<!--                                    {{ notification.message }}-->
+<!--                                </div>-->
+<!--                            </td>-->
+
+<!--                            &lt;!&ndash; Created By &ndash;&gt;-->
+<!--                            <td>-->
+<!--                                <small class="text-muted">-->
+<!--                                    {{ notification.creatorName }}-->
+<!--                                    <span *ngIf="notification.sentBySystem" class="badge badge-info ml-1">-->
+<!--            System-->
+<!--          </span>-->
+<!--                                </small>-->
+<!--                            </td>-->
+
+<!--                            &lt;!&ndash; Date &ndash;&gt;-->
+<!--                            <td>-->
+<!--                                <small>{{ notification.createdAt | date:'short' }}</small>-->
+<!--                                <br>-->
+<!--                                <small class="text-success" *ngIf="notification.readAt">-->
+<!--                                    Read: {{ notification.readAt | date:'short' }}-->
+<!--                                </small>-->
+<!--                            </td>-->
+
+<!--                            &lt;!&ndash; Actions &ndash;&gt;-->
+<!--                            <td>-->
+<!--                                <button-->
+<!--                                        class="btn btn-sm btn-outline-primary"-->
+<!--                                        (click)="markAsRead(notification)"-->
+<!--                                        *ngIf="notification.status === NotificationStatus.UNREAD"-->
+<!--                                        title="Mark as read">-->
+<!--                                    <i class="i-Check"></i>-->
+<!--                                </button>-->
+<!--                            </td>-->
+<!--                        </tr>-->
+<!--                    </ng-container>-->
+<!--                    </tbody>-->
+<!--                </table>-->
+<!--            </div>-->
             <div class="table-responsive" *ngIf="!loading && notifications.length > 0">
+
+                <!-- System Notifications Section - Above Table -->
+                <div class="system-notifications-section mb-3">
+                    <ng-container *ngFor="let notification of notifications">
+                        <app-system-notification
+                                *ngIf="notification.sentBySystem"
+                                [notification]="notification"
+                                [ngClass]="{'mb-2': true}">
+                        </app-system-notification>
+                    </ng-container>
+                </div>
+
+                <!-- Regular Notifications Table -->
                 <table class="table table-hover">
                     <thead>
                     <tr>
@@ -149,69 +251,69 @@
                         <th width="100">Actions</th>
                     </tr>
                     </thead>
+
                     <tbody>
-                    <tr
-                            *ngFor="let notification of notifications"
+                    <!-- Only Regular Notifications in Table -->
+                    <ng-container *ngFor="let notification of notifications">
+                        <tr *ngIf="!notification.sentBySystem"
                             [class.table-light]="notification.status === NotificationStatus.UNREAD">
 
-                        <!-- Type -->
-                        <td>
-                            <i [class]="getTypeIcon(notification.type)"
-                               class="text-primary"
-                               style="font-size: 20px;"></i>
-                        </td>
+                            <!-- Type -->
+                            <td>
+                                <i [class]="getTypeIcon(notification.type)"
+                                   class="text-primary"
+                                   style="font-size: 20px;"></i>
+                            </td>
 
-                        <!-- Status -->
-                        <td>
-                <span class="badge" [ngClass]="getStatusClass(notification.status)">
-                  {{ notification.status }}
-                </span>
-                        </td>
+                            <!-- Status -->
+                            <td>
+                        <span class="badge" [ngClass]="getStatusClass(notification.status)">
+                            {{ notification.status }}
+                        </span>
+                            </td>
 
-                        <!-- Priority -->
-                        <td>
-                <span class="badge" [ngClass]="getPriorityClass(notification.priority)">
-                  {{ notification.priority }}
-                </span>
-                        </td>
+                            <!-- Priority -->
+                            <td>
+                        <span class="badge" [ngClass]="getPriorityClass(notification.priority)">
+                            {{ notification.priority }}
+                        </span>
+                            </td>
 
-                        <!-- Message -->
-                        <td>
-                            <div class="notification-message">
-                                {{ notification.message }}
-                            </div>
-                        </td>
+                            <!-- Message -->
+                            <td>
+                                <div class="notification-message">
+                                    {{ notification.message }}
+                                </div>
+                            </td>
 
-                        <!-- Created By -->
-                        <td>
-                            <small class="text-muted">
-                                {{ notification.creatorName }}
-                                <span *ngIf="notification.sentBySystem" class="badge badge-info ml-1">
-                    System
-                  </span>
-                            </small>
-                        </td>
+                            <!-- Created By -->
+                            <td>
+                                <small class="text-muted">
+                                    {{ notification.creatorName }}
+                                </small>
+                            </td>
 
-                        <!-- Date -->
-                        <td>
-                            <small>{{ notification.createdAt | date:'short' }}</small>
-                            <br>
-                            <small class="text-success" *ngIf="notification.readAt">
-                                Read: {{ notification.readAt | date:'short' }}
-                            </small>
-                        </td>
+                            <!-- Date -->
+                            <td>
+                                <small>{{ notification.createdAt | date:'short' }}</small>
+                                <br>
+                                <small class="text-success" *ngIf="notification.readAt">
+                                    Read: {{ notification.readAt | date:'short' }}
+                                </small>
+                            </td>
 
-                        <!-- Actions -->
-                        <td>
-                            <button
-                                    class="btn btn-sm btn-outline-primary"
-                                    (click)="markAsRead(notification)"
-                                    *ngIf="notification.status === NotificationStatus.UNREAD"
-                                    title="Mark as read">
-                                <i class="i-Check"></i>
-                            </button>
-                        </td>
-                    </tr>
+                            <!-- Actions -->
+                            <td>
+                                <button
+                                        class="btn btn-sm btn-outline-primary"
+                                        (click)="markAsRead(notification)"
+                                        *ngIf="notification.status === NotificationStatus.UNREAD"
+                                        title="Mark as read">
+                                    <i class="i-Check"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </ng-container>
                     </tbody>
                 </table>
             </div>

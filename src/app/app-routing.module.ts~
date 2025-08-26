@@ -10,7 +10,10 @@ const adminRoutes: Routes = [
       path: 'dashboard',
       loadChildren: () => import('./views/dashboard/dashboard.module').then(m => m.DashboardModule)
     },
-
+  {
+    path: 'notifications',
+    loadChildren: () => import('./views/notification/notifications.module').then(m => m.NotificationsModule)
+  },
 
 
  

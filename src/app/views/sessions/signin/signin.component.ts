@@ -92,11 +92,12 @@ export class SigninComponent implements OnInit {
                 this.toastr.success('Welcome back!', 'Login Successful');
 
                 // Initialize WebSocket for notifications
-                const user = this.auth.getCurrentUser();
-                if (user) {
-                    this.notificationService.initializeWebSocket(user.id, response.access_token);
-                }
-
+                setTimeout(() => {
+                    const user = this.auth.getCurrentUser();
+                    if (user && user.id) {
+                        this.notificationService.initializeWebSocket(user.id, response.access_token);
+                    }
+                }, 1000);
 
 
 

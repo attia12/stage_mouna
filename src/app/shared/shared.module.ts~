@@ -7,24 +7,21 @@ import { SearchModule } from './components/search/search.module';
 import { SharedComponentsModule } from './components/shared-components.module';
 import { SharedDirectivesModule } from './directives/shared-directives.module';
 import { SharedPipesModule } from './pipes/shared-pipes.module';
-import {NotificationBellComponent} from "./notification-bell/notification-bell.component";
+
 
 @NgModule({
   imports: [
     CommonModule,
     SearchModule,
-    ToastrModule.forRoot(),
+    ToastrModule.forRoot({
+      positionClass: 'toast-bottom-left'
+    }),
     NgbModule,
     SharedComponentsModule,
     SharedDirectivesModule,
     SharedPipesModule,
     RouterModule
-  ],
-  declarations: [
-    NotificationBellComponent
-  ],
-  exports: [
-    NotificationBellComponent
   ]
+
 })
 export class SharedModule { }
